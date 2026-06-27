@@ -1,20 +1,46 @@
 package wildfire;
 
-public class Main {
-    public static void main(String[] args) {
-        SimConfig config = ConfigReader.readConfig("instructions.txt");
-        System.out.println("Config loaded: " + config);
+import mpi.*;
 
-        WildfireSimulation sim = new WildfireSimulation(config);
+public class Main {
+    public static void main(String[] args) throws Exception {
+
+        // Inicializiraj MPJ 
+        // args vsebuje MPJ interne parametre (ne instructions.txt)
+        MPI.Init(args);
+
+        // rank = kateri po vrsti
+        // size = koliko jih je
+        int rank = MPI.COMM_WORLD.Rank();
+        int size = MPI.COMM_WORLD.Size();
+
+        // Vsak proces prebere config samostojno
+        SimConfig config = ConfigReader.readConfig("instructions.txt");
+
+        // Samo proces 0 (master) izpisuje na začetku
+        if (rank == 0) {
+            System.out.println("Config loaded: " + config);
+            System.out.println("Processes: " + size);
+        }
+
+        // Ustvari simulacijo, vsak proces ve kdo je (rank) in koliko jih je (size)
+        WildfireSimulation sim = new WildfireSimulation(config, rank, size);
         sim.generateForest();
         sim.igniteRandomTiles();
 
+        // Merjenje časa, samo računanje, brez vizualizacije
         long startTime = System.currentTimeMillis();
         sim.run(null);
         long endTime = System.currentTimeMillis();
 
-        System.out.println("Simulation finished!");
-        System.out.println("Total ticks: " + sim.getTick());
-        System.out.println("Time: " + (endTime - startTime) + " ms");
+        // Samo master izpiše končne rezultate
+        if (rank == 0) {
+            System.out.println("Simulation finished!");
+            System.out.println("Total ticks: " + sim.getTick());
+            System.out.println("Time: " + (endTime - startTime) + " ms");
+        }
+
+        // Zaključi MPJ
+        MPI.Finalize();
     }
 }

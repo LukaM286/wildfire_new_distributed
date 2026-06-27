@@ -1,114 +1,117 @@
 package wildfire;
 
+import mpi.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import mpi.Request;
 
 /**
- * 
+ * Wildfire Simulation - Distributed Version (MPJ/MPI)
  *
- * Holds the grid and runs the tick-by-tick fire spreading logic.
- * Everything here is sequential (single-threaded)
+ * Kako deluje:
+ *   - Vsak proces ima SVOJ del grida (pas vrstic)
+ *   - Procesi si med seboj pošiljajo robne vrstice (boundary rows)
+ *     ,požar lahko preskoči med pasovi
+ *   - Ni skupnega pomnilnika, vse gre preko sporočil (Send/Recv)
+ *
+ * Primer z 4 procesi na gridu 100x100:
+ *   Proces 0: vrstice 0-24
+ *   Proces 1: vrstice 25-49
+ *   Proces 2: vrstice 50-74
+ *   Proces 3: vrstice 75-99
  */
 public class WildfireSimulation {
 
     private final SimConfig config;
     private final Random    rng;
 
-    // The grid: grid[row][col] = current state of that tile
+    // rank 
+    // size 
+    private final int rank;
+    private final int size;
+
+    // Vsak proces hrani CEL grid (za enostavnost)
     private TileState[][] grid;
+    private int[][]       burnTimer;
+    private boolean[][]   shouldIgnite;
+    private int           tick;
 
-    // burnTimer[row][col] = how many ticks this tile has been burning
-    // (0 if not burning)
-    private int[][] burnTimer;
+    // Kateri pas vrstic pripada temu procesu
+    private final int rowStart;
+    private final int rowEnd;
 
-    // Current simulation tick
-    private int tick;
+    public WildfireSimulation(SimConfig config, int rank, int size) {
+        this.config = config;
+        this.rank   = rank;
+        this.size   = size;
+        this.rng    = new Random(config.seed);
 
-    public WildfireSimulation(SimConfig config) {
-        this.config    = config;
-        this.rng       = new Random(config.seed);
-        this.grid      = new TileState[config.N][config.M];
-        this.burnTimer = new int[config.N][config.M];
-        this.tick      = 0;
+        this.grid         = new TileState[config.N][config.M];
+        this.burnTimer    = new int[config.N][config.M];
+        this.shouldIgnite = new boolean[config.N][config.M];
+        this.tick         = 0;
 
-        // Initialize everything as GRASS
-        for (int r = 0; r < config.N; r++) {
-            for (int c = 0; c < config.M; c++) {
+        // Izračunaj pas vrstic za ta proces
+        int rowsPerProcess = config.N / size;
+        this.rowStart = rank * rowsPerProcess;
+        this.rowEnd   = (rank == size - 1) ? config.N : rowStart + rowsPerProcess;
+
+        // Inicializiraj cel grid kot GRASS
+        for (int r = 0; r < config.N; r++)
+            for (int c = 0; c < config.M; c++)
                 grid[r][c] = TileState.GRASS;
-            }
-        }
     }
 
     // 
-    // STEP 1: Generate the forest using a random walk
+    // generateForest() - vsak proces generira ISTI gozd (isti seed)
+    // Tako ni potrebno pošiljati grida med procesi
     // 
 
-    /**
-     * Walks randomly across the grid, marking tiles as FOREST.
-     * Keeps walking until 50% of all tiles are forest.
-     */
     public void generateForest() {
-        int totalTiles  = config.N * config.M;
-        int targetForest = totalTiles / 2; // 50%
+        int totalTiles   = config.N * config.M;
+        int targetForest = totalTiles / 2;
 
-        // Start from a random tile
         int row = rng.nextInt(config.N);
         int col = rng.nextInt(config.M);
-
         int forestCount = 0;
 
-        // Direction arrays: up, down, left, right
         int[] dRow = {-1, 1, 0, 0};
         int[] dCol = { 0, 0,-1, 1};
 
         while (forestCount < targetForest) {
-            // Mark this tile as forest if it isn't already
             if (grid[row][col] == TileState.GRASS) {
                 grid[row][col] = TileState.FOREST;
                 forestCount++;
             }
-
-            // Pick a random direction to step
             int dir = rng.nextInt(4);
             int newRow = row + dRow[dir];
             int newCol = col + dCol[dir];
-
-            // Stay inside the grid (bounce off walls)
             if (newRow >= 0 && newRow < config.N && newCol >= 0 && newCol < config.M) {
                 row = newRow;
                 col = newCol;
             }
-            // If we'd go out of bounds, we just stay put and try again next iteration
         }
 
-        System.out.printf("Forest generated: %d tiles (%.1f%%)%n",
-            forestCount, 100.0 * forestCount / totalTiles);
+        if (rank == 0) {
+            System.out.printf("Forest generated: %d tiles (%.1f%%)%n",
+                forestCount, 100.0 * forestCount / totalTiles);
+        }
     }
 
     // 
-    // STEP 2: Start the fire at K random forest tiles
+    // igniteRandomTiles() - vsak proces zaigne iste tile (isti seed)
     // 
 
-    /**
-     * Picks K random FOREST tiles and sets them on FIRE.
-     */
     public void igniteRandomTiles() {
-        // Collect all forest tile positions
         List<int[]> forestTiles = new ArrayList<>();
-        for (int r = 0; r < config.N; r++) {
-            for (int c = 0; c < config.M; c++) {
-                if (grid[r][c] == TileState.FOREST) {
+        for (int r = 0; r < config.N; r++)
+            for (int c = 0; c < config.M; c++)
+                if (grid[r][c] == TileState.FOREST)
                     forestTiles.add(new int[]{r, c});
-                }
-            }
-        }
 
-        // Clamp K: can't ignite more tiles than we have forest
         int ignitions = Math.min(config.K, forestTiles.size());
-
-        // Shuffle and pick the first `ignitions` tiles
         Collections.shuffle(forestTiles, rng);
         for (int i = 0; i < ignitions; i++) {
             int r = forestTiles.get(i)[0];
@@ -117,58 +120,50 @@ public class WildfireSimulation {
             burnTimer[r][c] = 1;
         }
 
-        System.out.printf("Fire started at %d tiles%n", ignitions);
+        if (rank == 0) {
+            System.out.printf("Fire started at %d tiles%n", ignitions);
+        }
     }
 
     // 
-    // STEP 3: Run the simulation
+    // 
     // 
 
-    /**
-     * Runs tick by tick until no tile is burning anymore.
-     * After each tick, calls the visualizer to redraw the screen.
-     */
     public void run(SimVisualizer visualizer) {
-        while (hasBurningTile()) {
+        // Vsak proces preveri ali ima še goreče tile v SVOJEM pasu
+        // Potem z Allreduce preverimo če katerikoli proces še ima ogenj
+        while (globallyBurning()) {
             tick++;
             doTick();
 
-            if (visualizer != null) {
+            // Samo proces 0 skrbi za vizualizacijo
+            if (rank == 0 && visualizer != null) {
                 visualizer.repaintAndWait();
             }
         }
     }
 
-    /**
-     * One tick of the simulation:
-     *   1. Check which FOREST neighbors of BURNING tiles should ignite.
-     *   2. Advance burn timers; tiles that finish burning become BURNED.
-     */
+    // 
+    // En tick simulacije
+    // 
+
     private void doTick() {
-        // We need a separate "next state" grid so that changes in this tick
-        // don't immediately affect the same tick's spread calculation.
-        // (We update burnTimer in-place since it's only read by the "did it burn out?" check.)
 
-        boolean[][] shouldIgnite = new boolean[config.N][config.M];
+        // KORAK 1: Izmenjaj robne vrstice s sosednjimi procesi
+        // Vsak proces pošlje svojo prvo in zadnjo vrstico sosedom
+        exchangeBoundaryRows();
 
-        // Phase 1: Decide which forest tiles catch fire this tick
-        for (int r = 0; r < config.N; r++) {
+        // KORAK 2: Izračunaj shouldIgnite za svoj pas
+        for (int r = rowStart; r < rowEnd; r++) {
             for (int c = 0; c < config.M; c++) {
                 if (grid[r][c] == TileState.BURNING) {
-                    // Look at all 8 neighbors (diagonals included)
                     for (int dr = -1; dr <= 1; dr++) {
                         for (int dc = -1; dc <= 1; dc++) {
-                            if (dr == 0 && dc == 0) continue; // skip self
-
+                            if (dr == 0 && dc == 0) continue;
                             int nr = r + dr;
                             int nc = c + dc;
-
-                            // Check bounds
                             if (nr < 0 || nr >= config.N || nc < 0 || nc >= config.M) continue;
-
-                            // Only FOREST tiles can ignite
                             if (grid[nr][nc] == TileState.FOREST) {
-                                // 30% chance (or whatever pSpread is)
                                 if (rng.nextDouble() < config.pSpread) {
                                     shouldIgnite[nr][nc] = true;
                                 }
@@ -179,20 +174,15 @@ public class WildfireSimulation {
             }
         }
 
-        // Phase 2: Apply ignitions and advance burn timers
-        for (int r = 0; r < config.N; r++) {
+        // KORAK 3: Apliciraj spremembe za svoj pas
+        for (int r = rowStart; r < rowEnd; r++) {
             for (int c = 0; c < config.M; c++) {
-
                 if (shouldIgnite[r][c]) {
-                    // New fire!
-                    grid[r][c]      = TileState.BURNING;
-                    burnTimer[r][c] = 1;
-
+                    grid[r][c]         = TileState.BURNING;
+                    burnTimer[r][c]    = 1;
+                    shouldIgnite[r][c] = false;
                 } else if (grid[r][c] == TileState.BURNING) {
-                    // Already burning â€” advance timer
                     burnTimer[r][c]++;
-
-                    // If burned long enough, it turns to ash
                     if (burnTimer[r][c] > config.burnTicks) {
                         grid[r][c]      = TileState.BURNED;
                         burnTimer[r][c] = 0;
@@ -202,23 +192,123 @@ public class WildfireSimulation {
         }
     }
 
-    /**
-     * Returns true if at least one tile is still burning.
-     */
-    private boolean hasBurningTile() {
-        for (int r = 0; r < config.N; r++) {
-            for (int c = 0; c < config.M; c++) {
-                if (grid[r][c] == TileState.BURNING) return true;
-            }
+    // ----------------------------------------------------------------
+    // Izmenjava robnih vrstic med sosednjimi procesi
+    //
+    // 
+    // Proces 0 ima vrstice 0-24. Proces 1 ima vrstice 25-49.
+    // Če gori tile v vrstici 24 (proces 0), lahko vname tile v vrstici 25
+    // (ki pripada procesu 1). proces 1 ne ve da vrstica 24 gori
+    // 
+    // ----------------------------------------------------------------
+
+    private void exchangeBoundaryRows() {
+        int M = config.M;
+
+        // Pripravimo bufferje za pošiljanje in prejemanje
+        int[] sendDown = new int[M]; // pošljemo procesu rank+1
+        int[] sendUp   = new int[M]; // pošljemo procesu rank-1
+        int[] recvDown = new int[M]; // prejmemo od procesa rank+1
+        int[] recvUp   = new int[M]; // prejmemo od procesa rank-1
+
+        Request[] requests = new Request[4];
+        int reqCount = 0;
+
+        // Začni non-blocking prejemanje PREDEN pošiljamo
+        if (rank < size - 1) {
+            try {
+                requests[reqCount++] = MPI.COMM_WORLD.Irecv(recvDown, 0, M, MPI.INT, rank + 1, 0);
+            } catch (Exception e) { e.printStackTrace(); }
         }
-        return false;
+        if (rank > 0) {
+            try {
+                requests[reqCount++] = MPI.COMM_WORLD.Irecv(recvUp, 0, M, MPI.INT, rank - 1, 1);
+            } catch (Exception e) { e.printStackTrace(); }
+        }
+
+        // Pošlji robne vrstice
+        if (rank < size - 1) {
+            sendDown = tileRowToIntArray(grid[rowEnd - 1]);
+            try {
+                requests[reqCount++] = MPI.COMM_WORLD.Isend(sendDown, 0, M, MPI.INT, rank + 1, 1);
+            } catch (Exception e) { e.printStackTrace(); }
+        }
+        if (rank > 0) {
+            sendUp = tileRowToIntArray(grid[rowStart]);
+            try {
+                requests[reqCount++] = MPI.COMM_WORLD.Isend(sendUp, 0, M, MPI.INT, rank - 1, 0);
+            } catch (Exception e) { e.printStackTrace(); }
+        }
+
+        // Počakaj da se vse pošiljanje/prejemanje konča
+        try {
+            Request.Waitall(java.util.Arrays.copyOf(requests, reqCount));
+        } catch (Exception e) { e.printStackTrace(); }
+
+        // Shrani prejete vrstice
+        if (rank < size - 1 && rowEnd < config.N) {
+            intArrayToTileRow(recvDown, grid[rowEnd]);
+        }
+        if (rank > 0 && rowStart > 0) {
+            intArrayToTileRow(recvUp, grid[rowStart - 1]);
+        }
     }
 
     // 
-    // Getters (used by the visualizer)
+    // Preveri ali katerikoli proces še ima goreče tile
+    // MPI.Allreduce zbere vrednosti od vseh procesov
     // 
 
-    public TileState[][] getGrid()    { return grid; }
-    public SimConfig     getConfig()  { return config; }
-    public int           getTick()    { return tick; }
+    private boolean globallyBurning() {
+        int localBurning = 0;
+        for (int r = rowStart; r < rowEnd; r++)
+            for (int c = 0; c < config.M; c++)
+                if (grid[r][c] == TileState.BURNING) {
+                    localBurning = 1;
+                    break;
+                }
+
+        int[] local  = {localBurning};
+        int[] global = {0};
+
+        // Zberi vsote na procesu 0
+        try {
+            MPI.COMM_WORLD.Reduce(local, 0, global, 0, 1, MPI.INT, MPI.SUM, 0);
+        } catch (Exception e) { e.printStackTrace(); }
+
+        // Proces 0 pošlje rezultat vsem
+        try {
+            MPI.COMM_WORLD.Bcast(global, 0, 1, MPI.INT, 0);
+        } catch (Exception e) { e.printStackTrace(); }
+
+        return global[0] > 0;
+    }
+
+    // 
+    // Pomožne metode za pretvorbo TileState ↔ int
+    // (MPJ zna pošiljati int[], ne TileState[])
+    // 
+
+    private int[] tileRowToIntArray(TileState[] row) {
+        int[] arr = new int[row.length];
+        for (int i = 0; i < row.length; i++) {
+            arr[i] = row[i].ordinal(); // GRASS=0, FOREST=1, BURNING=2, BURNED=3
+        }
+        return arr;
+    }
+
+    private void intArrayToTileRow(int[] arr, TileState[] row) {
+        TileState[] values = TileState.values();
+        for (int i = 0; i < arr.length; i++) {
+            row[i] = values[arr[i]];
+        }
+    }
+
+    // 
+    // Getterji
+    // 
+
+    public TileState[][] getGrid()   { return grid; }
+    public SimConfig     getConfig() { return config; }
+    public int           getTick()   { return tick; }
 }
