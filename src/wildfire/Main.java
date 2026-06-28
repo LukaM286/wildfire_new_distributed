@@ -6,7 +6,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
 
         // Inicializiraj MPJ 
-        // args vsebuje MPJ interne parametre (ne instructions.txt)
+        
         MPI.Init(args);
 
         // rank = kateri po vrsti
@@ -23,7 +23,7 @@ public class Main {
             System.out.println("Processes: " + size);
         }
 
-        // Ustvari simulacijo, vsak proces ve kdo je (rank) in koliko jih je (size)
+        // vsak proces ve kdo je (rank) in koliko jih je (size)
         WildfireSimulation sim = new WildfireSimulation(config, rank, size);
         sim.generateForest();
         sim.igniteRandomTiles();

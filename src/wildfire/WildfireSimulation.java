@@ -8,9 +8,9 @@ import java.util.Random;
 import mpi.Request;
 
 /**
- * Wildfire Simulation - Distributed Version (MPJ/MPI)
+ * 
  *
- * Kako deluje:
+ * 
  *   - Vsak proces ima SVOJ del grida (pas vrstic)
  *   - Procesi si med seboj pošiljajo robne vrstice (boundary rows)
  *     ,požar lahko preskoči med pasovi
@@ -205,35 +205,35 @@ public class WildfireSimulation {
     private void exchangeBoundaryRows() {
         int M = config.M;
 
-        // Pripravimo bufferje za pošiljanje in prejemanje
-        int[] sendDown = new int[M]; // pošljemo procesu rank+1
-        int[] sendUp   = new int[M]; // pošljemo procesu rank-1
-        int[] recvDown = new int[M]; // prejmemo od procesa rank+1
-        int[] recvUp   = new int[M]; // prejmemo od procesa rank-1
+        // buffer za pošiljanje in prejemanje
+        int[] sendDown = new int[M]; // pošlji procesu rank+1
+        int[] sendUp   = new int[M]; // pošlji procesu rank-1
+        int[] recvDown = new int[M]; // prejmi od procesa rank+1
+        int[] recvUp   = new int[M]; // prejmi od procesa rank-1
 
         Request[] requests = new Request[4];
         int reqCount = 0;
 
-        // Začni non-blocking prejemanje PREDEN pošiljamo
-        if (rank < size - 1) {
-            try {
+        // non-blocking prejemanje PREDEN pošiljamo
+        if (rank < size - 1) { //če nisi zadnji proces(ta nima soseda spodaj)
+            try { //prejmi od procesa spodaj, pripravi se
                 requests[reqCount++] = MPI.COMM_WORLD.Irecv(recvDown, 0, M, MPI.INT, rank + 1, 0);
             } catch (Exception e) { e.printStackTrace(); }
         }
-        if (rank > 0) {
+        if (rank > 0) { //samo če nmisi prvi proces(ta nima soseda zograj)
             try {
                 requests[reqCount++] = MPI.COMM_WORLD.Irecv(recvUp, 0, M, MPI.INT, rank - 1, 1);
             } catch (Exception e) { e.printStackTrace(); }
         }
 
-        // Pošlji robne vrstice
-        if (rank < size - 1) {
-            sendDown = tileRowToIntArray(grid[rowEnd - 1]);
+        // robne vrstice
+        if (rank < size - 1) { //če nisi zadnji proces(ta nima soseda spodaj)
+            sendDown = tileRowToIntArray(grid[rowEnd - 1]); //poslji zadnjo vrstico pasa, spremeni v int[]
             try {
                 requests[reqCount++] = MPI.COMM_WORLD.Isend(sendDown, 0, M, MPI.INT, rank + 1, 1);
             } catch (Exception e) { e.printStackTrace(); }
         }
-        if (rank > 0) {
+        if (rank > 0) { //samo če nmisi prvi proces(ta nima soseda zograj)
             sendUp = tileRowToIntArray(grid[rowStart]);
             try {
                 requests[reqCount++] = MPI.COMM_WORLD.Isend(sendUp, 0, M, MPI.INT, rank - 1, 0);
@@ -271,7 +271,7 @@ public class WildfireSimulation {
         int[] local  = {localBurning};
         int[] global = {0};
 
-        // Zberi vsote na procesu 0
+        // Zberi vsote na procesu 0 (če se kaj gori)
         try {
             MPI.COMM_WORLD.Reduce(local, 0, global, 0, 1, MPI.INT, MPI.SUM, 0);
         } catch (Exception e) { e.printStackTrace(); }
