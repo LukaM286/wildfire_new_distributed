@@ -11,6 +11,11 @@ javac -d out src/wildfire/*.java
 # Run (instructions.txt must be in the current directory)
 java -cp out wildfire.Main
 ```
+OR
+
+cd "C:\Users\Admin\Documents\WILDFIRE_DISTRIBUTED"
+javac -cp "$env:MPJ_HOME\lib\mpi.jar;$env:MPJ_HOME\lib\mpj.jar" -d out (Get-ChildItem src/wildfire/*.java | % { $_.FullName })
+java -jar "$env:MPJ_HOME\lib\starter.jar" -np 4 -cp out wildfire.Main
 
 ## Configuration (`instructions.txt`)
 
