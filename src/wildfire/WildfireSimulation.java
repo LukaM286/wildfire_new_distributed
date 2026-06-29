@@ -11,10 +11,10 @@ import mpi.Request;
  * 
  *
  * 
- * Vsak proces ima svoj del grida
- * med seboj si pošiljajo robne vrstice (boundary rows)
+ * Vsak proces mora met svoj del grida
+ * med seboj si pošiljajo robne vrstice
  * ,požar lahko preskoči med pasovi
- * Ni skupnega pomnilnika, preko sporočil (Send/Recv)
+ * Ni skupnega pomnilnika, preko sporočil (Send/Recv)...
  *
  */
 public class WildfireSimulation {
@@ -59,7 +59,7 @@ public class WildfireSimulation {
     }
 
     // 
-    // generateForest() - vsak proces generira gozd (isti seed)
+    // generateForest(), vsak proces generira gozd (isti seed)
     // ni potrebno pošiljati grida med procesi
     // 
 
@@ -95,7 +95,7 @@ public class WildfireSimulation {
     }
 
     // 
-    // igniteRandomTiles() - vsak proces zaigne iste tile (isti seed)
+    // igniteRandomTiles(),vsak proces zaigne iste tile (isti seed)
     // 
 
     public void igniteRandomTiles() {
@@ -203,7 +203,7 @@ public class WildfireSimulation {
         Request[] requests = new Request[4];
         int reqCount = 0;
 
-        // non-blocking prejemanje PREDEN pošiljamo
+        // non-blocking prejemanje preden pošlje
         if (rank < size - 1) { //če nisi zadnji proces(ta nima soseda spodaj)
             try { //prejmi od procesa spodaj, pripravi se
                 requests[reqCount++] = MPI.COMM_WORLD.Irecv(recvDown, 0, M, MPI.INT, rank + 1, 0);
@@ -244,7 +244,7 @@ public class WildfireSimulation {
     }
 
     // 
-    // Preveri ali katerikoli proces še ima goreče tile
+    // Preveri ali katerikoli proces še ima goreče tiles
     // MPI.Allreduce zbere vrednosti od vseh procesov
     // 
 

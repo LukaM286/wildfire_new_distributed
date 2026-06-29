@@ -20,13 +20,12 @@ public class ConfigReader {
         int    K          = DEFAULT_K;
         double pSpread    = DEFAULT_P_SPREAD;
         int    burnTicks  = DEFAULT_BURN_TICKS;
-        long   seed       = System.currentTimeMillis(); // random seed by default
+        long   seed       = System.currentTimeMillis(); 
 
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
             String line;
             String[] parts;
 
-            // Try to read each line; if the line doesn't exist, keep the default
             line = reader.readLine();
             if (line != null) {
                 parts = line.trim().split("\\s+");

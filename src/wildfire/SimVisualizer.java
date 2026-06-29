@@ -36,7 +36,7 @@ public class SimVisualizer extends JFrame {
 
 
     public void repaintAndWait() {
-        // Ask Swing to repaint on the EDT (Event Dispatch Thread)
+        // repaint on the EDT (Event Dispatch Thread)
         SwingUtilities.invokeLater(gridPanel::repaint);
 
         try {
