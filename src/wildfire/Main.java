@@ -9,8 +9,6 @@ public class Main {
         
         MPI.Init(args);
 
-        // rank = kateri po vrsti
-        // size = koliko jih je
         int rank = MPI.COMM_WORLD.Rank();
         int size = MPI.COMM_WORLD.Size();
 
@@ -23,7 +21,6 @@ public class Main {
             System.out.println("Processes: " + size);
         }
 
-        // vsak proces ve kdo je (rank) in koliko jih je (size)
         WildfireSimulation sim = new WildfireSimulation(config, rank, size);
         sim.generateForest();
         sim.igniteRandomTiles();
@@ -53,7 +50,6 @@ public class Main {
             System.out.println("Time: " + (endTime - startTime) + " ms");
         }
 
-        // Zaključi MPJ
         MPI.Finalize();
     }
 }

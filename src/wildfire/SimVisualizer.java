@@ -6,13 +6,10 @@ import java.awt.*;
 
 public class SimVisualizer extends JFrame {
 
-    // How many pixels wide/tall each grid cell is
     private static final int CELL_SIZE = 6;
 
-    // Delay between frames in milliseconds (lower = faster simulation)
     private static final int FRAME_DELAY_MS = 30;
 
-    // Colors for each tile state
     private static final Color COLOR_GRASS   = new Color(210, 190, 140); // sandy tan
     private static final Color COLOR_FOREST  = new Color( 34, 100,  34); // dark green
     private static final Color COLOR_BURNING = new Color(230,  70,  10); // fire orange
@@ -33,7 +30,7 @@ public class SimVisualizer extends JFrame {
         add(gridPanel);
 
         pack();
-        // Razporedi okna po diagonali, da se ne prekrivajo popolnoma
+        //okna po diagonali, da se ne prekrivajo popolnoma
         setLocation(60 + rank * 70, 60 + rank * 50);
         setVisible(true);
     }
@@ -78,7 +75,6 @@ public class SimVisualizer extends JFrame {
                 }
             }
 
-            // Zatemni vrstice, ki NISO v pasu tega procesa
             // ta proces jih ne posodablja 
             int rowStart = sim.getRowStart();
             int rowEnd   = sim.getRowEnd();

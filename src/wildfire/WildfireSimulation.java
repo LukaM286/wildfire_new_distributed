@@ -11,10 +11,10 @@ import mpi.Request;
  * 
  *
  * 
- *   - Vsak proces ima svoj del grida
- *   - med seboj si pošiljajo robne vrstice (boundary rows)
- *     ,požar lahko preskoči med pasovi
- *   - Ni skupnega pomnilnika, preko sporočil (Send/Recv)
+ * Vsak proces ima svoj del grida
+ * med seboj si pošiljajo robne vrstice (boundary rows)
+ * ,požar lahko preskoči med pasovi
+ * Ni skupnega pomnilnika, preko sporočil (Send/Recv)
  *
  */
 public class WildfireSimulation {
@@ -48,12 +48,12 @@ public class WildfireSimulation {
         this.shouldIgnite = new boolean[config.N][config.M];
         this.tick         = 0;
 
-        // Izračunaj pas vrstic za ta proces
+        //pas vrstic za ta proces
         int rowsPerProcess = config.N / size;
         this.rowStart = rank * rowsPerProcess;
         this.rowEnd   = (rank == size - 1) ? config.N : rowStart + rowsPerProcess;
 
-        // Inicializiraj cel grid kot GRASS
+        //cel grid kot GRASS
         for (int r = 0; r < config.N; r++)
             for (int c = 0; c < config.M; c++)
                 grid[r][c] = TileState.GRASS;
@@ -125,7 +125,7 @@ public class WildfireSimulation {
     // 
 
     public void run(SimVisualizer visualizer) {
-        // Vsak proces preveri ali ima še goreče tile v SVOJEM pasu
+        // Vsak proces preveri ali ima še goreče tile v pasu
         // Potem z Allreduce preveri če katerikoli proces še ima ogenj
         while (globallyBurning()) {
             tick++;
@@ -144,11 +144,11 @@ public class WildfireSimulation {
 
     private void doTick() {
 
-        // KORAK 1: Izmenjaj robne vrstice s sosednjimi procesi
+        // izmenjaj robne vrstice s sosednjimi procesi
         // Vsak proces pošlji svojo prvo in zadnjo vrstico sosedom
         exchangeBoundaryRows();
 
-        // KORAK 2: Izračunaj shouldIgnite za svoj pas
+        //izračunaj shouldIgnite za svoj pas
         for (int r = rowStart; r < rowEnd; r++) {
             for (int c = 0; c < config.M; c++) {
                 if (grid[r][c] == TileState.BURNING) {
@@ -169,7 +169,7 @@ public class WildfireSimulation {
             }
         }
 
-        // KORAK 3: Apliciraj spremembe za svoj pas
+        // apliciraj spremembe za svoj pas
         for (int r = rowStart; r < rowEnd; r++) {
             for (int c = 0; c < config.M; c++) {
                 if (shouldIgnite[r][c]) {
@@ -191,9 +191,6 @@ public class WildfireSimulation {
     // Izmenjava robnih vrstic med sosednjimi procesi
     //
     // 
-    // Proces 0 ima vrstice 0-24. Proces 1 ima vrstice 25-49.
-    // Če gori tile v vrstici 24 (proces 0), lahko vname tile v vrstici 25
-    // (ki pripada procesu 1). proces 1 ne ve da vrstica 24 gori
     // 
     // 
 
@@ -281,7 +278,6 @@ public class WildfireSimulation {
 
     // 
     // Pomožne metode za pretvorbo TileState ↔ int
-    // (MPJ zna pošiljati int[], ne TileState[])
     // 
 
     private int[] tileRowToIntArray(TileState[] row) {
