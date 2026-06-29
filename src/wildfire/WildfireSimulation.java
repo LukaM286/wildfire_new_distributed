@@ -11,16 +11,11 @@ import mpi.Request;
  * 
  *
  * 
- *   - Vsak proces ima SVOJ del grida (pas vrstic)
- *   - Procesi si med seboj pošiljajo robne vrstice (boundary rows)
+ *   - Vsak proces ima svoj del grida
+ *   - med seboj si pošiljajo robne vrstice (boundary rows)
  *     ,požar lahko preskoči med pasovi
  *   - Ni skupnega pomnilnika, preko sporočil (Send/Recv)
  *
- * Primer z 4 procesi na gridu 100x100:
- *   Proces 0: vrstice 0-24
- *   Proces 1: vrstice 25-49
- *   Proces 2: vrstice 50-74
- *   Proces 3: vrstice 75-99
  */
 public class WildfireSimulation {
 
