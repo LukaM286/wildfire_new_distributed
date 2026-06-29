@@ -3,7 +3,7 @@ package wildfire;
 import javax.swing.*;
 import java.awt.*;
 
-/
+
 public class SimVisualizer extends JFrame {
 
     // How many pixels wide/tall each grid cell is
