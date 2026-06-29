@@ -5,17 +5,14 @@ import mpi.*;
 public class Main {
     public static void main(String[] args) throws Exception {
 
-        // Inicializiraj MPJ 
         
         MPI.Init(args);
 
         int rank = MPI.COMM_WORLD.Rank();
         int size = MPI.COMM_WORLD.Size();
 
-        // Vsak proces prebere config samostojno
         SimConfig config = ConfigReader.readConfig("instructions.txt");
 
-        // Samo proces 0 (master) izpisuje na začetku
         if (rank == 0) {
             System.out.println("Config loaded: " + config);
             System.out.println("Processes: " + size);
@@ -43,7 +40,6 @@ public class Main {
 
         long endTime = System.currentTimeMillis();
 
-        // Samo master izpiše končne rezultate
         if (rank == 0) {
             System.out.println("Simulation finished!");
             System.out.println("Total ticks: " + sim.getTick());

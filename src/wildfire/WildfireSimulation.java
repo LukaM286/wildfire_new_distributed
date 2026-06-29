@@ -27,13 +27,12 @@ public class WildfireSimulation {
     private final int rank;
     private final int size;
 
-    // Vsak proces hrani CEL grid
+    // Vsak proces hrani grid
     private TileState[][] grid;
     private int[][]       burnTimer;
     private boolean[][]   shouldIgnite;
     private int           tick;
 
-    // Kateri pas vrstic pripada temu procesu
     private final int rowStart;
     private final int rowEnd;
 
@@ -60,7 +59,7 @@ public class WildfireSimulation {
     }
 
     // 
-    // generateForest() - vsak proces generira ISTI gozd (isti seed)
+    // generateForest() - vsak proces generira gozd (isti seed)
     // ni potrebno pošiljati grida med procesi
     // 
 
@@ -138,14 +137,12 @@ public class WildfireSimulation {
         }
     }
 
-    // 
-    // En tick simulacije
-    // 
+    //en tick
 
     private void doTick() {
 
         // izmenjaj robne vrstice s sosednjimi procesi
-        // Vsak proces pošlji svojo prvo in zadnjo vrstico sosedom
+        // Vsak pošlji svojo prvo in zadnjo vrstico sosedom
         exchangeBoundaryRows();
 
         //izračunaj shouldIgnite za svoj pas
@@ -276,9 +273,7 @@ public class WildfireSimulation {
         return global[0] > 0;
     }
 
-    // 
-    // Pomožne metode za pretvorbo TileState ↔ int
-    // 
+
 
     private int[] tileRowToIntArray(TileState[] row) {
         int[] arr = new int[row.length];

@@ -10,11 +10,10 @@ public class SimVisualizer extends JFrame {
 
     private static final int FRAME_DELAY_MS = 30;
 
-    private static final Color COLOR_GRASS   = new Color(210, 190, 140); // sandy tan
-    private static final Color COLOR_FOREST  = new Color( 34, 100,  34); // dark green
-    private static final Color COLOR_BURNING = new Color(230,  70,  10); // fire orange
-    private static final Color COLOR_BURNED  = new Color( 60,  50,  40); // dark ash
-
+    private static final Color COLOR_GRASS   = new Color(210, 190, 140); 
+    private static final Color COLOR_FOREST  = new Color( 34, 100,  34); 
+    private static final Color COLOR_BURNING = new Color(230,  70,  10); 
+    private static final Color COLOR_BURNED  = new Color( 60,  50,  40); 
     private final WildfireSimulation sim;
     private final GridPanel gridPanel;
 
@@ -47,9 +46,6 @@ public class SimVisualizer extends JFrame {
         }
     }
 
-    // 
-    // actual drawing
-    // 
 
     private class GridPanel extends JPanel {
 
@@ -67,7 +63,6 @@ public class SimVisualizer extends JFrame {
             int N = sim.getConfig().N;
             int M = sim.getConfig().M;
 
-            // Draw each tile
             for (int r = 0; r < N; r++) {
                 for (int c = 0; c < M; c++) {
                     g.setColor(colorFor(grid[r][c]));
@@ -87,7 +82,6 @@ public class SimVisualizer extends JFrame {
                 g2.fillRect(0, rowEnd * CELL_SIZE, M * CELL_SIZE, (N - rowEnd) * CELL_SIZE);
             }
 
-            // Draw tick counter at the bottom
             g.setColor(Color.WHITE);
             g.setFont(new Font("Monospaced", Font.BOLD, 13));
             g.drawString("Tick: " + sim.getTick(), 8, N * CELL_SIZE + 20);
