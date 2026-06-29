@@ -136,7 +136,7 @@ public class WildfireSimulation {
             tick++;
             doTick();
 
-            // Samo proces 0 skrbi za vizualizacijo
+            
             if (rank == 0 && visualizer != null) {
                 visualizer.repaintAndWait();
             }

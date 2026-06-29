@@ -30,6 +30,19 @@ public class Main {
 
         long startTime = System.currentTimeMillis();
         sim.run(null);
+
+
+
+
+/* proces 0 bi moral gather?
+        SimVisualizer visualizer = null;
+        if (rank == 0) {
+            visualizer = new SimVisualizer(sim);
+        }
+        sim.run(visualizer);
+*/
+
+
         long endTime = System.currentTimeMillis();
 
         // Samo master izpiše končne rezultate
