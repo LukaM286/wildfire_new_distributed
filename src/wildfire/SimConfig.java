@@ -1,9 +1,6 @@
 package wildfire;
 
-/**
- * Holds all simulation parameters.
- * 
- */
+
 public class SimConfig {
     public final int N;           // number of rows
     public final int M;           // number of columns

@@ -14,7 +14,7 @@ import mpi.Request;
  *   - Vsak proces ima SVOJ del grida (pas vrstic)
  *   - Procesi si med seboj pošiljajo robne vrstice (boundary rows)
  *     ,požar lahko preskoči med pasovi
- *   - Ni skupnega pomnilnika, vse gre preko sporočil (Send/Recv)
+ *   - Ni skupnega pomnilnika, preko sporočil (Send/Recv)
  *
  * Primer z 4 procesi na gridu 100x100:
  *   Proces 0: vrstice 0-24
@@ -32,7 +32,7 @@ public class WildfireSimulation {
     private final int rank;
     private final int size;
 
-    // Vsak proces hrani CEL grid (za enostavnost)
+    // Vsak proces hrani CEL grid
     private TileState[][] grid;
     private int[][]       burnTimer;
     private boolean[][]   shouldIgnite;
@@ -66,7 +66,7 @@ public class WildfireSimulation {
 
     // 
     // generateForest() - vsak proces generira ISTI gozd (isti seed)
-    // Tako ni potrebno pošiljati grida med procesi
+    // ni potrebno pošiljati grida med procesi
     // 
 
     public void generateForest() {
@@ -131,7 +131,7 @@ public class WildfireSimulation {
 
     public void run(SimVisualizer visualizer) {
         // Vsak proces preveri ali ima še goreče tile v SVOJEM pasu
-        // Potem z Allreduce preverimo če katerikoli proces še ima ogenj
+        // Potem z Allreduce preveri če katerikoli proces še ima ogenj
         while (globallyBurning()) {
             tick++;
             doTick();
@@ -150,7 +150,7 @@ public class WildfireSimulation {
     private void doTick() {
 
         // KORAK 1: Izmenjaj robne vrstice s sosednjimi procesi
-        // Vsak proces pošlje svojo prvo in zadnjo vrstico sosedom
+        // Vsak proces pošlji svojo prvo in zadnjo vrstico sosedom
         exchangeBoundaryRows();
 
         // KORAK 2: Izračunaj shouldIgnite za svoj pas
@@ -192,7 +192,7 @@ public class WildfireSimulation {
         }
     }
 
-    // ----------------------------------------------------------------
+    // 
     // Izmenjava robnih vrstic med sosednjimi procesi
     //
     // 
@@ -200,7 +200,7 @@ public class WildfireSimulation {
     // Če gori tile v vrstici 24 (proces 0), lahko vname tile v vrstici 25
     // (ki pripada procesu 1). proces 1 ne ve da vrstica 24 gori
     // 
-    // ----------------------------------------------------------------
+    // 
 
     private void exchangeBoundaryRows() {
         int M = config.M;

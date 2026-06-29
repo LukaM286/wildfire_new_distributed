@@ -3,18 +3,7 @@ package wildfire;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Draws the simulation grid in a window.
- *
- * 
- * Each grid cell is drawn as a colored rectangle.
- *
- * Color legend:
- *   Tan/Yellow  = GRASS (open land)
- *   Dark Green  = FOREST (trees)
- *   Orange/Red  = BURNING (fire!)
- *   Dark Gray   = BURNED (ash)
- */
+/
 public class SimVisualizer extends JFrame {
 
     // How many pixels wide/tall each grid cell is
@@ -47,9 +36,7 @@ public class SimVisualizer extends JFrame {
         setVisible(true);
     }
 
-    /**
-     * Redraws the grid and waits a short time so we can see the animation.
-     */
+
     public void repaintAndWait() {
         // Ask Swing to repaint on the EDT (Event Dispatch Thread)
         SwingUtilities.invokeLater(gridPanel::repaint);
@@ -62,14 +49,14 @@ public class SimVisualizer extends JFrame {
     }
 
     // 
-    // Inner panel that does the actual drawing
+    // actual drawing
     // 
 
     private class GridPanel extends JPanel {
 
         public GridPanel() {
             int width  = sim.getConfig().M * CELL_SIZE;
-            int height = sim.getConfig().N * CELL_SIZE + 30; // +30 for tick label
+            int height = sim.getConfig().N * CELL_SIZE + 30; 
             setPreferredSize(new Dimension(width, height));
         }
 
@@ -101,7 +88,7 @@ public class SimVisualizer extends JFrame {
                 case FOREST:  return COLOR_FOREST;
                 case BURNING: return COLOR_BURNING;
                 case BURNED:  return COLOR_BURNED;
-                default:      return Color.MAGENTA; // should never happen
+                default:      return Color.MAGENTA; 
             }
         }
     }
