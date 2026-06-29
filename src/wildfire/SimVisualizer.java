@@ -24,7 +24,8 @@ public class SimVisualizer extends JFrame {
     public SimVisualizer(WildfireSimulation sim) {
         this.sim = sim;
 
-        setTitle("Wildfire Simulation");
+        int rank = sim.getRank();
+        setTitle("Wildfire - proces " + rank + " (vrstice " + sim.getRowStart() + "-" + (sim.getRowEnd() - 1) + ")");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
 
@@ -32,7 +33,8 @@ public class SimVisualizer extends JFrame {
         add(gridPanel);
 
         pack();
-        setLocationRelativeTo(null); // center on screen
+        // Razporedi okna po diagonali, da se ne prekrivajo popolnoma
+        setLocation(60 + rank * 70, 60 + rank * 50);
         setVisible(true);
     }
 
@@ -74,6 +76,19 @@ public class SimVisualizer extends JFrame {
                     g.setColor(colorFor(grid[r][c]));
                     g.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
                 }
+            }
+
+            // Zatemni vrstice, ki NISO v pasu tega procesa
+            // ta proces jih ne posodablja 
+            int rowStart = sim.getRowStart();
+            int rowEnd   = sim.getRowEnd();
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setColor(new Color(0, 0, 0, 140));
+            if (rowStart > 0) {
+                g2.fillRect(0, 0, M * CELL_SIZE, rowStart * CELL_SIZE);
+            }
+            if (rowEnd < N) {
+                g2.fillRect(0, rowEnd * CELL_SIZE, M * CELL_SIZE, (N - rowEnd) * CELL_SIZE);
             }
 
             // Draw tick counter at the bottom

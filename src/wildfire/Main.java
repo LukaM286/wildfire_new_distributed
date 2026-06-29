@@ -29,10 +29,11 @@ public class Main {
         sim.igniteRandomTiles();
 
         long startTime = System.currentTimeMillis();
-        sim.run(null);
+        //sim.run(null);
 
+        SimVisualizer visualizer = new SimVisualizer(sim);
 
-
+        sim.run(visualizer);
 
 /* proces 0 bi moral gather?
         SimVisualizer visualizer = null;

@@ -137,7 +137,7 @@ public class WildfireSimulation {
             doTick();
 
             
-            if (rank == 0 && visualizer != null) {
+            if (visualizer != null) {
                 visualizer.repaintAndWait();
             }
         }
@@ -311,4 +311,12 @@ public class WildfireSimulation {
     public TileState[][] getGrid()   { return grid; }
     public SimConfig     getConfig() { return config; }
     public int           getTick()   { return tick; }
+
+
+    //get za animacijo 
+    public int getRowStart() { return rowStart; }
+    public int getRowEnd()   { return rowEnd; }
+    public int getRank()     { return rank; }
+    public int getSize()     { return size; }
+
 }
