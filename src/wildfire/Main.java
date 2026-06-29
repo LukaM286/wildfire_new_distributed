@@ -28,7 +28,6 @@ public class Main {
         sim.generateForest();
         sim.igniteRandomTiles();
 
-        // Merjenje časa, samo računanje, brez vizualizacije
         long startTime = System.currentTimeMillis();
         sim.run(null);
         long endTime = System.currentTimeMillis();
