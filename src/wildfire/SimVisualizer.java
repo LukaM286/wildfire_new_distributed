@@ -82,7 +82,7 @@ public class SimVisualizer extends JFrame {
                 g2.fillRect(0, rowEnd * CELL_SIZE, M * CELL_SIZE, (N - rowEnd) * CELL_SIZE); //enako za spodnji pas
             }
 
-            g.setColor(Color.WHITE);
+            g.setColor(Color.BLACK);
             g.setFont(new Font("Monospaced", Font.BOLD, 13));
             g.drawString("Tick: " + sim.getTick(), 8, N * CELL_SIZE + 20);
         }
