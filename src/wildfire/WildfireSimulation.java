@@ -79,7 +79,7 @@ public class WildfireSimulation {
                 grid[row][col] = TileState.FOREST;
                 forestCount++;
             }
-            int dir = rng.nextInt(4);
+            int dir = rng.nextInt(4); //med 0-3
             int newRow = row + dRow[dir];
             int newCol = col + dCol[dir];
             if (newRow >= 0 && newRow < config.N && newCol >= 0 && newCol < config.M) {
@@ -205,12 +205,12 @@ public class WildfireSimulation {
 
         // non-blocking prejemanje preden pošlje
         if (rank < size - 1) { //če nisi zadnji proces(ta nima soseda spodaj)
-            try { //prejmi od procesa spodaj, pripravi se
+            try { //prejmi od procesa spodaj, pripravi se,  buffer,indeks,koliko el. pričakuje(št. ene vrstice),tip,od koga, tag
                 requests[reqCount++] = MPI.COMM_WORLD.Irecv(recvDown, 0, M, MPI.INT, rank + 1, 0);
             } catch (Exception e) { e.printStackTrace(); }
         }
         if (rank > 0) { //samo če nmisi prvi proces(ta nima soseda zograj)
-            try {
+            try { //pripravi za prejemanje
                 requests[reqCount++] = MPI.COMM_WORLD.Irecv(recvUp, 0, M, MPI.INT, rank - 1, 1);
             } catch (Exception e) { e.printStackTrace(); }
         }
@@ -234,11 +234,11 @@ public class WildfireSimulation {
             Request.Waitall(java.util.Arrays.copyOf(requests, reqCount));
         } catch (Exception e) { e.printStackTrace(); }
 
-        // Shrani prejete vrstice
+        // Shrani prejete vrstice, ghost row izven mojega pasa
         if (rank < size - 1 && rowEnd < config.N) {
             intArrayToTileRow(recvDown, grid[rowEnd]);
         }
-        if (rank > 0 && rowStart > 0) {
+        if (rank > 0 && rowStart > 0) { //enako
             intArrayToTileRow(recvUp, grid[rowStart - 1]);
         }
     }
@@ -261,12 +261,12 @@ public class WildfireSimulation {
         int[] global = {0};
 
         // Zberi vsote na procesu 0 (če se kaj gori)
-        try {
+        try {                    //sendbuf,indeks,recvbuff,indeks,count,type,operation,root
             MPI.COMM_WORLD.Reduce(local, 0, global, 0, 1, MPI.INT, MPI.SUM, 0);
         } catch (Exception e) { e.printStackTrace(); }
 
         // Proces 0 pošlje rezultat vsem
-        try {
+        try {                    //buffer,indeks,count,tip,root
             MPI.COMM_WORLD.Bcast(global, 0, 1, MPI.INT, 0);
         } catch (Exception e) { e.printStackTrace(); }
 

@@ -30,7 +30,7 @@ public class SimVisualizer extends JFrame {
 
         pack();
         //okna po diagonali, da se ne prekrivajo popolnoma
-        setLocation(60 + rank * 70, 60 + rank * 50);
+        setLocation(60 + rank * 70, 60 + rank * 50); //x razdalja od levega roba, y od zgornjega
         setVisible(true);
     }
 
@@ -76,10 +76,10 @@ public class SimVisualizer extends JFrame {
             Graphics2D g2 = (Graphics2D) g;
             g2.setColor(new Color(0, 0, 0, 140));
             if (rowStart > 0) {
-                g2.fillRect(0, 0, M * CELL_SIZE, rowStart * CELL_SIZE);
+                g2.fillRect(0, 0, M * CELL_SIZE, rowStart * CELL_SIZE); //zatemnjen pas od vrha do začetka pasa threada
             }
             if (rowEnd < N) {
-                g2.fillRect(0, rowEnd * CELL_SIZE, M * CELL_SIZE, (N - rowEnd) * CELL_SIZE);
+                g2.fillRect(0, rowEnd * CELL_SIZE, M * CELL_SIZE, (N - rowEnd) * CELL_SIZE); //enako za spodnji pas
             }
 
             g.setColor(Color.WHITE);
