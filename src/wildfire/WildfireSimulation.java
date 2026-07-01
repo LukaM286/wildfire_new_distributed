@@ -145,8 +145,12 @@ public class WildfireSimulation {
         // Vsak pošlji svojo prvo in zadnjo vrstico sosedom
         exchangeBoundaryRows();
 
+
+        int scanStart = (rowStart > 0) ? rowStart - 1 : rowStart;
+        int scanEnd   = (rowEnd < config.N) ? rowEnd + 1 : rowEnd;
+
         //izračunaj shouldIgnite za svoj pas
-        for (int r = rowStart; r < rowEnd; r++) {
+        for (int r = scanStart; r < scanEnd; r++) {
             for (int c = 0; c < config.M; c++) {
                 if (grid[r][c] == TileState.BURNING) {
                     for (int dr = -1; dr <= 1; dr++) {
