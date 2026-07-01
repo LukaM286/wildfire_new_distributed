@@ -146,8 +146,21 @@ public class WildfireSimulation {
         exchangeBoundaryRows();
 
 
-        int scanStart = (rowStart > 0) ? rowStart - 1 : rowStart;
-        int scanEnd   = (rowEnd < config.N) ? rowEnd + 1 : rowEnd;
+    int scanStart;
+
+    if (rowStart > 0) {
+        scanStart = rowStart - 1;
+    } else {
+        scanStart = rowStart;
+    }
+
+    int scanEnd;
+
+    if (rowEnd < config.N) {
+        scanEnd = rowEnd + 1;
+    } else {
+        scanEnd = rowEnd;
+    }
 
         //izračunaj shouldIgnite za svoj pas
         for (int r = scanStart; r < scanEnd; r++) {
